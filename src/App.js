@@ -99,7 +99,7 @@ export default function App() {
                  setChatHistory(prev => [...prev, { sender: 'bot', message: questions[0].text }]);
             }, 1000);
         }
-    }, []);
+    }, [chatHistory.length, questions]); // <-- UPDATED DEPENDENCIES
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
