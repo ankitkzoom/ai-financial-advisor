@@ -1,11 +1,9 @@
 [build]
   command = "npm run build"
-  functions = "netlify/functions/"
   publish = "build/"
+  functions = "netlify/functions/"
 
-# Configuration for Netlify Functions
 [functions]
-  # Increase the timeout for all functions to 30 seconds.
   timeout = 30
 
 [[redirects]]
