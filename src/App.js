@@ -149,7 +149,10 @@ export default function App() {
             });
 
             if (!response.ok) {
+<<<<<<< HEAD
+=======
                 // Check for a 504 Gateway Timeout specifically
+>>>>>>> 46c2863153bba8fc400bf18aa6a944471d7e34c1
                 if (response.status === 504) {
                     throw new Error("The request timed out. The server is busy. Please try again in a moment.");
                 }
