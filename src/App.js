@@ -38,7 +38,6 @@ const LoadingSpinner = () => (
 );
 
 // --- Constant Data ---
-// Moved outside the component to prevent re-creation on every render.
 const questions = [
     { id: 'name', text: "To get started, what's your full name?", category: 'Basic Profile', type: 'text' },
     { id: 'age', text: "Great! What's your age?", category: 'Basic Profile', type: 'number' },
@@ -148,24 +147,13 @@ export default function App() {
                 body: JSON.stringify({ answers })
             });
 
-            if (!response.ok) {
-<<<<<<< HEAD
-=======
-                // Check for a 504 Gateway Timeout specifically
->>>>>>> 46c2863153bba8fc400bf18aa6a944471d7e34c1
-                if (response.status === 504) {
-                    throw new Error("The request timed out. The server is busy. Please try again in a moment.");
-                }
-                const errorText = await response.text();
-                try {
-                    const errorJson = JSON.parse(errorText);
-                    throw new Error(errorJson.error || `Server error: ${response.status}`);
-                } catch (e) {
-                    throw new Error(errorText || `Server error: ${response.status}`);
-                }
-            }
-
             const result = await response.json();
+
+            if (!response.ok) {
+                // Use the error message from the serverless function's JSON response
+                throw new Error(result.error || `Server error: ${response.status}`);
+            }
+            
             setFinancialPlan(result.plan);
 
         } catch (error) {
