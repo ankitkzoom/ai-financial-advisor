@@ -3,6 +3,11 @@
   functions = "netlify/functions/"
   publish = "build/"
 
+# Configuration for Netlify Functions
+[functions]
+  # Increase the timeout for all functions to 30 seconds.
+  timeout = 30
+
 [[redirects]]
   from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"
