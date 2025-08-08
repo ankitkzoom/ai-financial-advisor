@@ -148,16 +148,16 @@ export default function App() {
                 body: JSON.stringify({ answers })
             });
 
-            // If the response is not OK, handle it as a potential non-JSON error.
             if (!response.ok) {
+                // Check for a 504 Gateway Timeout specifically
+                if (response.status === 504) {
+                    throw new Error("The request timed out. The server is busy. Please try again in a moment.");
+                }
                 const errorText = await response.text();
                 try {
-                    // Try to parse it as JSON, as our function should return { error: "..." }
                     const errorJson = JSON.parse(errorText);
                     throw new Error(errorJson.error || `Server error: ${response.status}`);
                 } catch (e) {
-                    // If parsing fails, it's not JSON. Use the raw text.
-                    // This catches server crash messages, timeouts, etc.
                     throw new Error(errorText || `Server error: ${response.status}`);
                 }
             }
