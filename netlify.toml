@@ -3,7 +3,9 @@
   publish = "build/"
   functions = "netlify/functions/"
 
-[functions]
+# Apply a 30-second timeout to all functions using a wildcard.
+# This is a more robust way to set a global timeout.
+[functions."*"]
   timeout = 30
 
 [[redirects]]
