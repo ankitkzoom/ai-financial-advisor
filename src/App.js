@@ -2,21 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 
 // --- Helper Components ---
 
-// Icon for the chatbot avatar
 const BotAvatar = () => (
     <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-md flex-shrink-0">
         F
     </div>
 );
 
-// Icon for the user avatar
 const UserAvatar = () => (
     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xl shadow-md flex-shrink-0">
         U
     </div>
 );
 
-// A single chat bubble
 const ChatBubble = ({ message, sender }) => (
     <div className={`flex items-start gap-3 my-4 ${sender === 'user' ? 'justify-end' : 'justify-start'}`}>
         {sender === 'bot' && <BotAvatar />}
@@ -33,7 +30,6 @@ const ChatBubble = ({ message, sender }) => (
     </div>
 );
 
-// Loading spinner component
 const LoadingSpinner = () => (
     <div className="flex justify-center items-center p-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
@@ -41,8 +37,30 @@ const LoadingSpinner = () => (
     </div>
 );
 
-// --- Main Application ---
+// --- Constant Data ---
+// Moved outside the component to prevent re-creation on every render.
+const questions = [
+    { id: 'name', text: "To get started, what's your full name?", category: 'Basic Profile', type: 'text' },
+    { id: 'age', text: "Great! What's your age?", category: 'Basic Profile', type: 'number' },
+    { id: 'location', text: "Which city and state do you live in? This helps with location-specific advice.", category: 'Basic Profile', type: 'text' },
+    { id: 'occupation', text: "What is your current occupation? (e.g., Salaried, Self-employed, Student)", category: 'Employment & Income', type: 'text' },
+    { id: 'monthlyIncome', text: "What is your approximate monthly take-home income (in INR)?", category: 'Employment & Income', type: 'number' },
+    { id: 'incomeType', text: "Is your income generally fixed or does it vary each month?", category: 'Employment & Income', options: ['Fixed', 'Variable'] },
+    { id: 'monthlyExpenses', text: "On average, how much do you spend on essentials like rent, groceries, and utilities each month?", category: 'Expenses & Lifestyle', type: 'number' },
+    { id: 'dependents', text: "Do you have any dependents you support financially? (e.g., Spouse, Children, Parents)", category: 'Expenses & Lifestyle', type: 'text' },
+    { id: 'healthInsurance', text: "Do you currently have health insurance?", category: 'Expenses & Lifestyle', options: ['Yes', 'No'] },
+    { id: 'loans', text: "Do you have any ongoing loans like a home, car, or personal loan?", category: 'Liabilities & Debt', options: ['Yes', 'No'] },
+    { id: 'creditCardDebt', text: "Do you typically carry an outstanding balance on your credit cards?", category: 'Liabilities & Debt', options: ['Yes', 'No'] },
+    { id: 'savings', text: "Roughly how much do you have in savings accounts?", category: 'Financial Assets', type: 'number' },
+    { id: 'investments', text: "Do you invest in Mutual Funds, Stocks, or FDs?", category: 'Financial Assets', options: ['Yes', 'No'] },
+    { id: 'shortTermGoals', text: "What's a short-term financial goal you have? (e.g., Vacation, new gadget, emergency fund)", category: 'Financial Goals', type: 'text' },
+    { id: 'longTermGoals', text: "And what about a long-term goal? (e.g., Retirement, buying a house)", category: 'Financial Goals', type: 'text' },
+    { id: 'monthlyInvestment', text: "How much are you comfortable investing each month towards these goals?", category: 'Financial Goals', type: 'number' },
+    { id: 'riskAppetite', text: "How comfortable are you with investment risk?", category: 'Risk Appetite', options: ['Low', 'Medium', 'High'] },
+    { id: 'investmentPreference', text: "Do you prefer guaranteed returns (safer) or higher potential returns (with risk)?", category: 'Risk Appetite', options: ['Guaranteed Returns', 'Higher Potential Returns'] },
+];
 
+// --- Main Application ---
 export default function App() {
     // --- State Management ---
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -55,43 +73,7 @@ export default function App() {
     const [apiError, setApiError] = useState('');
     const chatEndRef = useRef(null);
 
-    // --- Questions Data ---
-    const questions = [
-        // Section 1: Basic Profile
-        { id: 'name', text: "To get started, what's your full name?", category: 'Basic Profile', type: 'text' },
-        { id: 'age', text: "Great! What's your age?", category: 'Basic Profile', type: 'number' },
-        { id: 'location', text: "Which city and state do you live in? This helps with location-specific advice.", category: 'Basic Profile', type: 'text' },
-
-        // Section 2: Employment & Income
-        { id: 'occupation', text: "What is your current occupation? (e.g., Salaried, Self-employed, Student)", category: 'Employment & Income', type: 'text' },
-        { id: 'monthlyIncome', text: "What is your approximate monthly take-home income (in INR)?", category: 'Employment & Income', type: 'number' },
-        { id: 'incomeType', text: "Is your income generally fixed or does it vary each month?", category: 'Employment & Income', options: ['Fixed', 'Variable'] },
-
-        // Section 3: Expenses & Lifestyle
-        { id: 'monthlyExpenses', text: "On average, how much do you spend on essentials like rent, groceries, and utilities each month?", category: 'Expenses & Lifestyle', type: 'number' },
-        { id: 'dependents', text: "Do you have any dependents you support financially? (e.g., Spouse, Children, Parents)", category: 'Expenses & Lifestyle', type: 'text' },
-        { id: 'healthInsurance', text: "Do you currently have health insurance?", category: 'Expenses & Lifestyle', options: ['Yes', 'No'] },
-
-        // Section 4: Liabilities & Debt
-        { id: 'loans', text: "Do you have any ongoing loans like a home, car, or personal loan?", category: 'Liabilities & Debt', options: ['Yes', 'No'] },
-        { id: 'creditCardDebt', text: "Do you typically carry an outstanding balance on your credit cards?", category: 'Liabilities & Debt', options: ['Yes', 'No'] },
-
-        // Section 5: Current Financial Assets
-        { id: 'savings', text: "Roughly how much do you have in savings accounts?", category: 'Financial Assets', type: 'number' },
-        { id: 'investments', text: "Do you invest in Mutual Funds, Stocks, or FDs?", category: 'Financial Assets', options: ['Yes', 'No'] },
-
-        // Section 6: Financial Goals
-        { id: 'shortTermGoals', text: "What's a short-term financial goal you have? (e.g., Vacation, new gadget, emergency fund)", category: 'Financial Goals', type: 'text' },
-        { id: 'longTermGoals', text: "And what about a long-term goal? (e.g., Retirement, buying a house)", category: 'Financial Goals', type: 'text' },
-        { id: 'monthlyInvestment', text: "How much are you comfortable investing each month towards these goals?", category: 'Financial Goals', type: 'number' },
-
-        // Section 7: Risk Appetite
-        { id: 'riskAppetite', text: "How comfortable are you with investment risk?", category: 'Risk Appetite', options: ['Low', 'Medium', 'High'] },
-        { id: 'investmentPreference', text: "Do you prefer guaranteed returns (safer) or higher potential returns (with risk)?", category: 'Risk Appetite', options: ['Guaranteed Returns', 'Higher Potential Returns'] },
-    ];
-
     // --- Effects ---
-
     useEffect(() => {
         if (chatHistory.length === 0) {
             setChatHistory([{ sender: 'bot', message: "Hi there! I'm your personal finance assistant. I'll ask a few questions to understand your financial situation. Let's start with the basics." }]);
@@ -99,14 +81,13 @@ export default function App() {
                  setChatHistory(prev => [...prev, { sender: 'bot', message: questions[0].text }]);
             }, 1000);
         }
-    }, [chatHistory.length, questions]); // <-- UPDATED DEPENDENCIES
+    }, [chatHistory.length]); // <-- 'questions' removed as it's now a stable constant.
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chatHistory, isGenerating, financialPlan]);
 
     // --- Functions ---
-
     const handleSend = () => {
         const currentQuestion = questions[currentQuestionIndex];
         if (!inputValue.trim() && currentQuestion.type !== 'options') return;
@@ -158,12 +139,9 @@ export default function App() {
         setFinancialPlan('');
         setApiError('');
 
-        // The API endpoint is now our own serverless function.
-        // For Netlify, the path is /.netlify/functions/YOUR_FUNCTION_NAME
         const apiUrl = `/.netlify/functions/getPlan`;
 
         try {
-            // We send our collected answers to our secure function.
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
