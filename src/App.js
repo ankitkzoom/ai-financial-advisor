@@ -81,7 +81,7 @@ export default function App() {
                  setChatHistory(prev => [...prev, { sender: 'bot', message: questions[0].text }]);
             }, 1000);
         }
-    }, [chatHistory.length]); // <-- 'questions' removed as it's now a stable constant.
+    }, [chatHistory.length]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -148,9 +148,18 @@ export default function App() {
                 body: JSON.stringify({ answers })
             });
 
+            // If the response is not OK, handle it as a potential non-JSON error.
             if (!response.ok) {
-                const errorResult = await response.json();
-                throw new Error(errorResult.error || `API Error: ${response.status}`);
+                const errorText = await response.text();
+                try {
+                    // Try to parse it as JSON, as our function should return { error: "..." }
+                    const errorJson = JSON.parse(errorText);
+                    throw new Error(errorJson.error || `Server error: ${response.status}`);
+                } catch (e) {
+                    // If parsing fails, it's not JSON. Use the raw text.
+                    // This catches server crash messages, timeouts, etc.
+                    throw new Error(errorText || `Server error: ${response.status}`);
+                }
             }
 
             const result = await response.json();
