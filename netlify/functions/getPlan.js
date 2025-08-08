@@ -7,7 +7,12 @@ export const config = {
   timeout: 30,
 };
 
+<<<<<<< HEAD
+// Use a named export for the handler function, consistent with the config export.
+export async function handler(event, context) {
+=======
 exports.handler = async function (event, context) {
+>>>>>>> 46c2863153bba8fc400bf18aa6a944471d7e34c1
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
