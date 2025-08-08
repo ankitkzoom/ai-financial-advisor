@@ -1,6 +1,12 @@
 // This is a Netlify serverless function.
 // It acts as a secure backend to call the Gemini API.
 
+// Increase the timeout for this specific function.
+// The default is 10 seconds, which might not be enough for a cold start + Gemini API call.
+export const config = {
+  timeout: 30,
+};
+
 exports.handler = async function (event, context) {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
